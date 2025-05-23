@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation"
 type User = {
   id: string
   email: string
-  username: string
+  username?: string
 }
 
 type AuthContextType = {
@@ -20,163 +20,228 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Token management utilities
+const TOKEN_STORAGE_KEY = "flortapp_auth_tokens"
+
+interface StoredTokens {
+  access_token: string
+  refresh_token: string
+  expires_at: number
+  user: User
+}
+
+const storeTokens = (session: any, user: User) => {
+  if (typeof window === "undefined") return
+
+  try {
+    // Ensure we have all required token data
+    if (!session?.access_token || !session?.refresh_token) {
+      console.error("Incomplete session data, not storing tokens")
+      return
+    }
+
+    const tokens: StoredTokens = {
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+      expires_at: Date.now() + 3600 * 1000, // Default to 1 hour if expires_at is not available
+      user,
+    }
+
+    localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(tokens))
+  } catch (error) {
+    console.error("Error storing tokens:", error)
+  }
+}
+
+const getStoredTokens = (): StoredTokens | null => {
+  if (typeof window === "undefined") return null
+
+  try {
+    const stored = localStorage.getItem(TOKEN_STORAGE_KEY)
+    if (!stored) return null
+
+    const tokens = JSON.parse(stored) as StoredTokens
+
+    // Validate token structure
+    if (!tokens.access_token || !tokens.refresh_token || !tokens.user) {
+      console.warn("Invalid token structure in storage, clearing")
+      clearStoredTokens()
+      return null
+    }
+
+    return tokens
+  } catch (error) {
+    console.error("Error parsing stored tokens:", error)
+    clearStoredTokens()
+    return null
+  }
+}
+
+const clearStoredTokens = () => {
+  if (typeof window === "undefined") return
+  localStorage.removeItem(TOKEN_STORAGE_KEY)
+}
+
+const isTokenValid = (tokens: StoredTokens): boolean => {
+  if (!tokens || !tokens.expires_at) return false
+
+  const now = Date.now()
+  const bufferTime = 5 * 60 * 1000 // 5 minutes buffer
+  return tokens.expires_at > now + bufferTime
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    // Check for existing session
-    const checkSession = async () => {
+    const initializeAuth = async () => {
       try {
         const supabase = getSupabaseBrowser()
 
-        // Check if auth methods exist
-        if (!supabase.auth || !supabase.auth.getSession) {
-          console.error("Supabase auth methods not available")
-          setLoading(false)
-          return
-        }
+        // First check for an existing session directly with Supabase
+        const { data: sessionData } = await supabase.auth.getSession()
 
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession()
-
-        if (sessionError) {
-          console.error("Error getting session:", sessionError)
-          setLoading(false)
-          return
-        }
-
-        if (session) {
-          // Check if session is older than 24 hours
-          const lastLoginTime = new Date(session.created_at).getTime()
-          const currentTime = new Date().getTime()
-          const hoursDiff = (currentTime - lastLoginTime) / (1000 * 60 * 60)
-
-          if (hoursDiff > 24) {
-            await supabase.auth.signOut()
-            setUser(null)
-          } else {
-            // Get user data
-            const {
-              data: { user: supabaseUser },
-              error: userError,
-            } = await supabase.auth.getUser()
-
-            if (userError) {
-              console.error("Error getting user:", userError)
-              setLoading(false)
-              return
-            }
-
-            if (supabaseUser) {
-              setUser({
-                id: supabaseUser.id,
-                email: supabaseUser.email || "",
-                username: "Admin", // Hardcoded for now
-              })
-            }
+        if (sessionData?.session) {
+          // We already have a valid session, use it
+          const userData: User = {
+            id: sessionData.session.user.id,
+            email: sessionData.session.user.email || "",
+            username: sessionData.session.user.email?.split("@")[0] || "",
           }
+
+          setUser(userData)
+          storeTokens(sessionData.session, userData)
+          setLoading(false)
+          return
         }
 
-        setLoading(false)
+        // No active session, try to restore from stored tokens
+        const storedTokens = getStoredTokens()
+
+        if (storedTokens && isTokenValid(storedTokens)) {
+          try {
+            // Use the refresh token to get a new session
+            const { data, error } = await supabase.auth.refreshSession({
+              refresh_token: storedTokens.refresh_token,
+            })
+
+            if (error) {
+              console.warn("Failed to refresh session:", error.message)
+              clearStoredTokens()
+            } else if (data?.session) {
+              // Successfully refreshed the session
+              const userData: User = {
+                id: data.session.user.id,
+                email: data.session.user.email || "",
+                username: data.session.user.email?.split("@")[0] || "",
+              }
+
+              setUser(userData)
+              storeTokens(data.session, userData)
+            }
+          } catch (refreshError) {
+            console.error("Error refreshing session:", refreshError)
+            clearStoredTokens()
+          }
+        } else if (storedTokens) {
+          // Tokens exist but are invalid
+          clearStoredTokens()
+        }
       } catch (error) {
-        console.error("Unexpected error in checkSession:", error)
+        console.error("Unexpected error in initializeAuth:", error)
+        clearStoredTokens()
+      } finally {
         setLoading(false)
       }
     }
 
-    checkSession()
+    initializeAuth()
 
     // Listen for auth changes
-    try {
-      const supabase = getSupabaseBrowser()
+    const supabase = getSupabaseBrowser()
 
-      // Check if auth methods exist
-      if (!supabase.auth || !supabase.auth.onAuthStateChange) {
-        console.error("Supabase auth.onAuthStateChange not available")
-        return () => {}
-      }
+    const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event)
 
-      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log("Auth state changed:", event)
-
-        if (session) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email || "",
-            username: "Admin", // Hardcoded for now
-          })
-        } else {
-          setUser(null)
+      if (event === "SIGNED_IN" && session) {
+        const userData: User = {
+          id: session.user.id,
+          email: session.user.email || "",
+          username: session.user.email?.split("@")[0] || "",
         }
 
-        setLoading(false)
-      })
-
-      return () => {
-        if (data && data.subscription && data.subscription.unsubscribe) {
-          data.subscription.unsubscribe()
+        setUser(userData)
+        storeTokens(session, userData)
+        router.push("/")
+      } else if (event === "SIGNED_OUT") {
+        setUser(null)
+        clearStoredTokens()
+      } else if (event === "TOKEN_REFRESHED" && session) {
+        // Update stored tokens when refreshed
+        if (user) {
+          storeTokens(session, user)
         }
       }
-    } catch (error) {
-      console.error("Error setting up auth listener:", error)
-      return () => {}
+    })
+
+    return () => {
+      data?.subscription?.unsubscribe?.()
     }
-  }, [])
+  }, [router, user])
 
   const signIn = async (email: string, password: string) => {
     try {
+      setLoading(true)
       const supabase = getSupabaseBrowser()
 
-      // Check if auth methods exist
-      if (!supabase.auth || !supabase.auth.signInWithPassword) {
-        console.error("Supabase auth.signInWithPassword not available")
-        return { error: new Error("Authentication not available") }
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       })
 
-      if (!error && data.user) {
-        setUser({
-          id: data.user.id,
-          email: data.user.email || "",
-          username: "Admin", // Hardcoded for now
-        })
-
-        // Use direct navigation for more reliable redirection
-        setTimeout(() => {
-          window.location.href = "/"
-        }, 1000)
+      if (error) {
+        console.error("Login error:", error.message)
+        return { error }
       }
 
-      return { error }
+      if (data?.session) {
+        const userData: User = {
+          id: data.session.user.id,
+          email: data.session.user.email || "",
+          username: data.session.user.email?.split("@")[0] || "",
+        }
+
+        setUser(userData)
+        storeTokens(data.session, userData)
+        return { error: null }
+      }
+
+      return { error: new Error("No session returned after login") }
     } catch (err) {
-      console.error("Auth error:", err)
+      console.error("Unexpected auth error:", err)
       return { error: err }
+    } finally {
+      setLoading(false)
     }
   }
 
   const signOut = async () => {
     try {
+      setLoading(true)
       const supabase = getSupabaseBrowser()
-
-      // Check if auth methods exist
-      if (!supabase.auth || !supabase.auth.signOut) {
-        console.error("Supabase auth.signOut not available")
-        return
-      }
-
       await supabase.auth.signOut()
       setUser(null)
+      clearStoredTokens()
       router.push("/login")
     } catch (error) {
       console.error("Error signing out:", error)
+      // Force clear even on error
+      setUser(null)
+      clearStoredTokens()
+    } finally {
+      setLoading(false)
     }
   }
 

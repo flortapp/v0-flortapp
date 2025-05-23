@@ -4,40 +4,11 @@ import { createClient } from "@supabase/supabase-js"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Log for debugging, but don't expose the actual values
-console.log("Supabase initialization status:", {
-  hasUrl: !!supabaseUrl,
-  hasKey: !!supabaseAnonKey,
-})
-
-// Create a safer initialization function
-const createSafeClient = () => {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error("Missing Supabase credentials. Make sure environment variables are set.")
-
-    // Create a dummy client with all required methods to prevent runtime errors
-    return {
-      auth: {
-        getSession: async () => ({ data: { session: null }, error: null }),
-        getUser: async () => ({ data: { user: null }, error: null }),
-        signInWithPassword: async () => ({ data: { user: null, session: null }, error: null }),
-        signOut: async () => ({ error: null }),
-        onAuthStateChange: (callback: any) => {
-          console.warn("Auth state change listener called with dummy client")
-          return { data: { subscription: { unsubscribe: () => {} } } }
-        },
-      },
-      from: () => ({
-        select: () => ({ data: null, error: null }),
-        insert: () => ({ data: null, error: null }),
-        update: () => ({ data: null, error: null }),
-        delete: () => ({ data: null, error: null }),
-      }),
-    } as any
-  }
-
-  // Create the real client if credentials are available
-  return createClient(supabaseUrl, supabaseAnonKey)
+// Validate environment variables
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    "Missing Supabase environment variables. Please check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  )
 }
 
 // Create a singleton instance for the browser
@@ -49,7 +20,13 @@ export const getSupabaseBrowser = () => {
   }
 
   if (!browserClient) {
-    browserClient = createSafeClient()
+    browserClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    })
   }
 
   return browserClient
@@ -57,7 +34,13 @@ export const getSupabaseBrowser = () => {
 
 // For server components
 export const getSupabaseServer = () => {
-  return createSafeClient()
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  })
 }
 
 // For backward compatibility
