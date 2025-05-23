@@ -49,7 +49,7 @@ export default function LoginPage() {
     setIsLoading(true)
 
     // For this specific admin account
-    if (username === "Admin" && password === "onurapp123") {
+    if (username === "admin@flortapp.com" && password === "onurapp123") {
       // Use the email format that Supabase expects
       const email = "admin@flortapp.com" // You should create this account in Supabase
 
