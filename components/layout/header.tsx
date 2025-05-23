@@ -52,7 +52,13 @@ export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>{user ? user.username : "Hesap"}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer">
+            <DropdownMenuItem
+              onClick={() => {
+                console.log("Logout clicked")
+                signOut()
+              }}
+              className="cursor-pointer"
+            >
               <LogOut className="mr-2 h-4 w-4" />
               Çıkış
             </DropdownMenuItem>

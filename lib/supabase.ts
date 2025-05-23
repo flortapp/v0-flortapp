@@ -25,6 +25,7 @@ export const getSupabaseBrowser = () => {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        storageKey: "supabase.auth.token",
       },
     })
   }

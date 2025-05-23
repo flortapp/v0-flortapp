@@ -174,10 +174,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setUser(userData)
         storeTokens(session, userData)
-        router.push("/")
+
+        // Use window.location for more reliable navigation
+        window.location.href = "/"
       } else if (event === "SIGNED_OUT") {
         setUser(null)
         clearStoredTokens()
+
+        // Only redirect if we're not already on the login page
+        if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+          window.location.href = "/login"
+        }
       } else if (event === "TOKEN_REFRESHED" && session) {
         // Update stored tokens when refreshed
         if (user) {
@@ -231,15 +238,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true)
       const supabase = getSupabaseBrowser()
+
+      // Sign out from Supabase
       await supabase.auth.signOut()
+
+      // Clear local state
       setUser(null)
       clearStoredTokens()
-      router.push("/login")
+
+      // Force clear localStorage as a fallback
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(TOKEN_STORAGE_KEY)
+        // Clear any other auth-related items
+        localStorage.removeItem("supabase.auth.token")
+      }
+
+      console.log("User signed out successfully")
+
+      // Navigate to login page
+      window.location.href = "/login"
     } catch (error) {
       console.error("Error signing out:", error)
       // Force clear even on error
       setUser(null)
       clearStoredTokens()
+
+      // Force navigation on error
+      window.location.href = "/login"
     } finally {
       setLoading(false)
     }
