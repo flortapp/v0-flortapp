@@ -8,16 +8,12 @@ import { Button } from "@/components/ui/button"
 import {
   BarChart3,
   Users,
-  MessageSquare,
   Bot,
   ShieldAlert,
-  ShoppingCart,
-  Send,
   Settings,
   ChevronLeft,
   ChevronRight,
   Flame,
-  ArrowUpRight,
 } from "lucide-react"
 
 interface SidebarProps {
@@ -33,8 +29,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
   // Define menu items with their sub-items
   const menuItems = [
     { id: "dashboard", label: "Gösterge Paneli", icon: BarChart3, href: "/" },
-    // { id: "vip", label: "VIP Üyeler", icon: Heart, href: "/vip" }, // Removed VIP menu item
-    { id: "users", label: "Kullanıcılar", icon: Users, href: "/users" }, // Updated Users menu item
+    { id: "users", label: "Kullanıcılar", icon: Users, href: "/users" },
     {
       id: "dating-bot",
       label: "Dating Bot",
@@ -46,11 +41,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
         { id: "bot-conversations", label: "Bot Konuşmaları", href: "/bot-conversations/1" },
       ],
     },
-    { id: "chat", label: "Sohbet", icon: MessageSquare, href: "/chat" },
-    { id: "escalations", label: "Yükseltilmiş Konuşmalar", icon: ArrowUpRight, href: "/escalations" },
     { id: "spam", label: "Spam & Engellenenler", icon: ShieldAlert, href: "/spam" },
-    { id: "in-app-purchases", label: "Uygulama İçi Satın Alım", icon: ShoppingCart, href: "/in-app-purchases" }, // Updated menu item
-    { id: "bulk-message", label: "Toplu Mesaj", icon: Send, href: "/bulk-message" },
     { id: "settings", label: "Ayarlar", icon: Settings, href: "/settings" },
   ]
 

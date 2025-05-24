@@ -204,25 +204,11 @@ const BlockedTable = ({ searchQuery }: BlockedTableProps) => {
       </div>
 
       <div className="flex items-center justify-end mt-4">
-        <Pagination>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            Önceki
-          </Button>
-          <div className="flex items-center mx-2">Sayfa {currentPage}</div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-            disabled={filteredData.length < itemsPerPage}
-          >
-            Sonraki
-          </Button>
-        </Pagination>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(filteredData.length / itemsPerPage)}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

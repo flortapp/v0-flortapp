@@ -22,13 +22,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
-import { ConversationLocationIndicator } from "@/components/live-chat/conversation-location-indicator"
 import { conversationTransitionService } from "@/services/conversation-transition-service"
 import { conversationService } from "@/services/conversation-service"
 import { mockApi } from "@/services/api-mock"
 import { format, parseISO } from "date-fns"
 import { tr } from "date-fns/locale"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { ConversationMetadata } from "@/types/conversation"
 
 interface BotConversationsListProps {
   botId?: string
@@ -642,9 +643,6 @@ export function BotConversationsList({ botId, filter = "all" }: BotConversations
                           Yükseltilebilir
                         </Badge>
                       )}
-                      <div className="ml-2">
-                        <ConversationLocationIndicator conversationId={conversation.id} showLabel={false} size="sm" />
-                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
