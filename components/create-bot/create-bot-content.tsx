@@ -92,8 +92,6 @@ export function CreateBotContent() {
       const formData = new FormData(e.target as HTMLFormElement)
       const userCount = formData.get("userCount")
       const language = formData.get("language")
-      const ageFrom = formData.get("ageFrom")
-      const ageTo = formData.get("ageTo")
       const bio = formData.get("bio")
 
       // Fotoğraf kontrolü
@@ -120,8 +118,6 @@ export function CreateBotContent() {
       // const response = await mockApi.bots.create({
       //   userCount,
       //   language,
-      //   ageFrom,
-      //   ageTo,
       //   photo,
       //   bio,
       //   country: "turkey", // Sabit değer
@@ -181,18 +177,6 @@ export function CreateBotContent() {
                     <SelectItem value="french">Fransızca</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="ageFrom">Yaşından İtibaren</Label>
-                  <Input id="ageFrom" name="ageFrom" type="number" min="18" max="80" defaultValue="18" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="ageTo">Yaşa kadar</Label>
-                  <Input id="ageTo" name="ageTo" type="number" min="18" max="80" defaultValue="45" />
-                </div>
               </div>
 
               <div className="space-y-2">
