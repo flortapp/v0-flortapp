@@ -25,7 +25,7 @@ export function ConsolidatedBotPanel() {
           <h1 className="text-2xl font-bold">Bot Yönetimi</h1>
           <Button
             className="bg-gradient-to-r from-pink-600 to-red-500 flex items-center gap-2"
-            onClick={() => router.push("/create-bot")}
+            onClick={() => router.push("/bot-management/create")}
           >
             <PlusCircle className="h-4 w-4" />
             <span>Yeni Bot Oluştur</span>
