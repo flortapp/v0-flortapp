@@ -39,15 +39,17 @@ import { format } from "date-fns"
 
 interface UsersTableProps {
   users: any[]
-  onDeleteUser: (userId: string) => void
-  onBlockUser: (userId: string) => void
-  onActivateUser: (userId: string) => void
+  isLoading?: boolean
+  onEdit?: (user: any) => void
+  onDelete?: (userId: string) => void
+  onBlockUser?: (userId: string) => void
+  onActivateUser?: (userId: string) => void
 }
 
 type SortField = "credits" | "createdAt" | null
 type SortDirection = "asc" | "desc"
 
-export function UsersTable({ users, onDeleteUser, onBlockUser, onActivateUser }: UsersTableProps) {
+export function UsersTable({ users, isLoading, onEdit, onDelete, onBlockUser, onActivateUser }: UsersTableProps) {
   const [selectedUser, setSelectedUser] = useState<any | null>(null)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showCreditsDialog, setShowCreditsDialog] = useState(false)
@@ -286,17 +288,17 @@ export function UsersTable({ users, onDeleteUser, onBlockUser, onActivateUser }:
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       {user.status === "blocked" ? (
-                        <DropdownMenuItem onClick={() => onActivateUser(user.id)}>
+                        <DropdownMenuItem onClick={() => onActivateUser?.(user.id)}>
                           <CheckCircle className="mr-2 h-4 w-4" />
                           Aktifleştir
                         </DropdownMenuItem>
                       ) : (
-                        <DropdownMenuItem onClick={() => onBlockUser(user.id)}>
+                        <DropdownMenuItem onClick={() => onBlockUser?.(user.id)}>
                           <Ban className="mr-2 h-4 w-4" />
                           Engelle
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem onClick={() => onDeleteUser(user.id)} className="text-red-600">
+                      <DropdownMenuItem onClick={() => onDelete?.(user.id)} className="text-red-600">
                         <Trash className="mr-2 h-4 w-4" />
                         Sil
                       </DropdownMenuItem>
@@ -309,7 +311,11 @@ export function UsersTable({ users, onDeleteUser, onBlockUser, onActivateUser }:
         </Table>
       </div>
 
-      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       {selectedUser && (
         <>
