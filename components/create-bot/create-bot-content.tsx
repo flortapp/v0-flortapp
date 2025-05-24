@@ -11,12 +11,15 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Loader2, Upload } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import { mockApi } from "@/services/api-mock"
 
 export function CreateBotContent() {
   const { toast } = useToast()
   const [photo, setPhoto] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [isCheckingPhoto, setIsCheckingPhoto] = useState(false)
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -42,13 +45,43 @@ export function CreateBotContent() {
       return
     }
 
-    // Resmi önizle
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      setPhotoPreview(e.target?.result as string)
+    setIsCheckingPhoto(true)
+
+    try {
+      // Resmi önizle
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        const base64Image = e.target?.result as string
+
+        // Fotoğrafın eşsizliğini kontrol et
+        const response = await mockApi.bots.checkPhotoUniqueness(base64Image)
+        
+        if (!response.isUnique) {
+          toast({
+            title: "Hata",
+            description: "Bu fotoğraf daha önce kullanılmış. Lütfen başka bir fotoğraf seçin.",
+            variant: "destructive",
+          })
+          setPhoto(null)
+          setPhotoPreview(null)
+          return
+        }
+
+        setPhotoPreview(base64Image)
+        setPhoto(file)
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Fotoğraf kontrolü sırasında bir hata oluştu.",
+        variant: "destructive",
+      })
+      setPhoto(null)
+      setPhotoPreview(null)
+    } finally {
+      setIsCheckingPhoto(false)
     }
-    reader.readAsDataURL(file)
-    setPhoto(file)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,14 +92,13 @@ export function CreateBotContent() {
       // Form verilerini al
       const formData = new FormData(e.target as HTMLFormElement)
       const userCount = formData.get("userCount")
-      const country = formData.get("country")
-      const gender = formData.get("gender")
       const language = formData.get("language")
       const ageFrom = formData.get("ageFrom")
       const ageTo = formData.get("ageTo")
       const withPhoto = formData.get("withPhoto") === "on"
       const withBio = formData.get("withBio") === "on"
       const verified = formData.get("verified") === "on"
+      const bio = formData.get("bio")
 
       // Fotoğraf kontrolü
       if (withPhoto && !photo) {
@@ -78,11 +110,19 @@ export function CreateBotContent() {
         return
       }
 
+      // Biyografi kontrolü
+      if (withBio && !bio) {
+        toast({
+          title: "Hata",
+          description: "Lütfen bir biyografi girin.",
+          variant: "destructive",
+        })
+        return
+      }
+
       // API çağrısı burada yapılacak
       // const response = await mockApi.bots.create({
       //   userCount,
-      //   country,
-      //   gender,
       //   language,
       //   ageFrom,
       //   ageTo,
@@ -90,6 +130,9 @@ export function CreateBotContent() {
       //   withBio,
       //   verified,
       //   photo,
+      //   bio,
+      //   country: "turkey", // Sabit değer
+      //   gender: "female", // Sabit değer
       // })
 
       // Başarılı toast mesajı
@@ -129,36 +172,6 @@ export function CreateBotContent() {
               <div className="space-y-2">
                 <Label htmlFor="userCount">Kullanıcı Sayısı</Label>
                 <Input id="userCount" name="userCount" type="number" min="1" defaultValue="1" />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="country">Ülke</Label>
-                <Select name="country" defaultValue="turkey">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Ülke seçin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="turkey">Türkiye</SelectItem>
-                    <SelectItem value="usa">Amerika Birleşik Devletleri</SelectItem>
-                    <SelectItem value="uk">Birleşik Krallık</SelectItem>
-                    <SelectItem value="germany">Almanya</SelectItem>
-                    <SelectItem value="france">Fransa</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="gender">Cinsiyet</Label>
-                <Select name="gender" defaultValue="all">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Cinsiyet seçin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Hepsi</SelectItem>
-                    <SelectItem value="male">Erkek</SelectItem>
-                    <SelectItem value="female">Kadın</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <div className="space-y-2">
@@ -227,7 +240,11 @@ export function CreateBotContent() {
                   <Avatar className="h-20 w-20">
                     <AvatarImage src={photoPreview || undefined} />
                     <AvatarFallback>
-                      <Upload className="h-8 w-8 text-muted-foreground" />
+                      {isCheckingPhoto ? (
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                      ) : (
+                        <Upload className="h-8 w-8 text-muted-foreground" />
+                      )}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -237,6 +254,7 @@ export function CreateBotContent() {
                       accept="image/*"
                       onChange={handlePhotoChange}
                       className="cursor-pointer"
+                      disabled={isCheckingPhoto}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       Maksimum dosya boyutu: 5MB. Desteklenen formatlar: JPG, PNG, GIF
@@ -244,9 +262,19 @@ export function CreateBotContent() {
                   </div>
                 </div>
               </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="bio">Biyografi</Label>
+                <Textarea
+                  id="bio"
+                  name="bio"
+                  placeholder="Bot için biyografi girin..."
+                  className="min-h-[100px]"
+                />
+              </div>
             </div>
 
-            <Button type="submit" className="w-full md:w-auto" disabled={isUploading}>
+            <Button type="submit" className="w-full md:w-auto" disabled={isUploading || isCheckingPhoto}>
               {isUploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
