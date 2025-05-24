@@ -16,7 +16,6 @@ import {
   Flame,
   ShoppingCart,
   Send,
-  Crown,
   MessageSquare,
   ArrowUpRight,
 } from "lucide-react"
@@ -46,7 +45,6 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
         { id: "bot-conversations", label: "Bot Konuşmaları", href: "/bot-conversations" },
       ],
     },
-    { id: "vip", label: "VIP Üyeler", icon: Crown, href: "/vip" },
     { id: "chat", label: "Sohbet", icon: MessageSquare, href: "/chat" },
     { id: "escalations", label: "Yükseltilmiş Konuşmalar", icon: ArrowUpRight, href: "/escalations" },
     { id: "in-app-purchases", label: "Uygulama İçi Satın Alım", icon: ShoppingCart, href: "/in-app-purchases" },
