@@ -207,131 +207,124 @@ export function UsersTable({ users, isLoading, onEdit, onDelete, onBlockUser, on
               <TableHead>Kullanıcı</TableHead>
               <TableHead>Durum</TableHead>
               <TableHead>Kayıt Yöntemi</TableHead>
-              <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("createdAt")}>
-                <div className="flex items-center">
-                  Kayıt Tarihi
-                  {getSortIcon("createdAt")}
+              <TableHead>
+                <div className="flex items-center cursor-pointer" onClick={() => handleSort("credits")}>
+                  Kredi
+                  {getSortIcon("credits")}
                 </div>
               </TableHead>
-              <TableHead>Son Aktif</TableHead>
-              <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("credits")}>
-                <div className="flex items-center">
-                  Jetonlar
-                  {getSortIcon("credits")}
+              <TableHead>
+                <div className="flex items-center cursor-pointer" onClick={() => handleSort("createdAt")}>
+                  Kayıt Tarihi
+                  {getSortIcon("createdAt")}
                 </div>
               </TableHead>
               <TableHead className="text-right">İşlemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedUsers.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">
-                  <div className="flex items-center space-x-3">
-                    <Avatar>
-                      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                      <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="flex items-center">
-                        <span className="font-medium">{user.name}</span>
-                        {user.isVip && <VipBadge className="ml-2" />}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {user.registrationMethod === "google" && (
-                          <span className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" /> {user.email?.split("@")[0]}@gmail.com
-                          </span>
-                        )}
-                        {user.registrationMethod === "apple" && (
-                          <span className="flex items-center gap-1">
-                            <Apple className="h-3 w-3" /> {user.email?.split("@")[0]}@icloud.com
-                          </span>
-                        )}
-                        {user.registrationMethod?.startsWith("phone:") && (
-                          <span className="flex items-center gap-1">
-                            <Smartphone className="h-3 w-3" /> {user.registrationMethod.replace("phone:", "")}
-                          </span>
-                        )}
-                        {user.registrationMethod?.startsWith("guest") && (
-                          <span className="flex items-center gap-1">
-                            <User className="h-3 w-3" /> Misafir ID: {user.id.substring(0, 8)}
-                          </span>
-                        )}
-                        {!user.registrationMethod && user.email}
-                      </div>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>{getStatusBadge(user.status)}</TableCell>
-                <TableCell>{getRegistrationMethodBadge(user.registrationMethod)}</TableCell>
-                <TableCell>{format(new Date(user.createdAt), "dd/MM/yyyy")}</TableCell>
-                <TableCell>
-                  {user.lastActive
-                    ? formatDistanceToNow(new Date(user.lastActive), { addSuffix: true, locale: tr })
-                    : "Bilinmiyor"}
-                </TableCell>
-                <TableCell>
-                  <div className="font-medium">{user.credits}</div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Menüyü aç</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleManageCredits(user)}>
-                        <CreditCard className="mr-2 h-4 w-4" />
-                        Jeton Yönetimi
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleViewSpendingHistory(user)}>
-                        <History className="mr-2 h-4 w-4" />
-                        Harcama Geçmişi
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      {user.status === "blocked" ? (
-                        <DropdownMenuItem onClick={() => onActivateUser?.(user.id)}>
-                          <CheckCircle className="mr-2 h-4 w-4" />
-                          Aktifleştir
-                        </DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem onClick={() => onBlockUser?.(user.id)}>
-                          <Ban className="mr-2 h-4 w-4" />
-                          Engelle
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem onClick={() => onDelete?.(user.id)} className="text-red-600">
-                        <Trash className="mr-2 h-4 w-4" />
-                        Sil
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center">
+                  Yükleniyor...
                 </TableCell>
               </TableRow>
-            ))}
+            ) : paginatedUsers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center">
+                  Kullanıcı bulunamadı
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.avatar} alt={user.name} />
+                        <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium">{user.name}</div>
+                        <div className="text-sm text-muted-foreground">{user.email}</div>
+                      </div>
+                      {user.isVip && <VipBadge />}
+                    </div>
+                  </TableCell>
+                  <TableCell>{getStatusBadge(user.status)}</TableCell>
+                  <TableCell>{getRegistrationMethodBadge(user.registrationMethod)}</TableCell>
+                  <TableCell>{user.credits}</TableCell>
+                  <TableCell>{formatDistanceToNow(new Date(user.createdAt), { addSuffix: true, locale: tr })}</TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Menüyü aç</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Düzenle</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleManageCredits(user)}>
+                          <CreditCard className="mr-2 h-4 w-4" />
+                          <span>Kredi Yönetimi</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewSpendingHistory(user)}>
+                          <History className="mr-2 h-4 w-4" />
+                          <span>Harcama Geçmişi</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {user.status === "blocked" ? (
+                          <DropdownMenuItem onClick={() => onActivateUser?.(user.id)}>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            <span>Engeli Kaldır</span>
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem onClick={() => onBlockUser?.(user.id)}>
+                            <Ban className="mr-2 h-4 w-4" />
+                            <span>Engelle</span>
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem onClick={() => onDelete?.(user.id)}>
+                          <Trash className="mr-2 h-4 w-4" />
+                          <span>Sil</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
 
-      <div className="flex justify-center mt-4">
+      {totalPages > 1 && (
         <Pagination>
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault()
+                  if (currentPage > 1) setCurrentPage(currentPage - 1)
+                }}
                 className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
               />
             </PaginationItem>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <PaginationItem key={page}>
                 <PaginationLink
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setCurrentPage(page)
+                  }}
                   isActive={currentPage === page}
-                  onClick={() => setCurrentPage(page)}
                 >
                   {page}
                 </PaginationLink>
@@ -339,18 +332,31 @@ export function UsersTable({ users, isLoading, onEdit, onDelete, onBlockUser, on
             ))}
             <PaginationItem>
               <PaginationNext
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault()
+                  if (currentPage < totalPages) setCurrentPage(currentPage + 1)
+                }}
                 className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
               />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
-      </div>
+      )}
 
       {selectedUser && (
         <>
-          <UserEditDialog user={selectedUser} open={showEditDialog} onOpenChange={setShowEditDialog} />
-          <UserCreditsDialog user={selectedUser} open={showCreditsDialog} onOpenChange={setShowCreditsDialog} />
+          <UserEditDialog
+            user={selectedUser}
+            open={showEditDialog}
+            onOpenChange={setShowEditDialog}
+            onSave={onEdit}
+          />
+          <UserCreditsDialog
+            user={selectedUser}
+            open={showCreditsDialog}
+            onOpenChange={setShowCreditsDialog}
+          />
           <UserSpendingHistoryCustom
             user={selectedUser}
             open={showSpendingHistory}
