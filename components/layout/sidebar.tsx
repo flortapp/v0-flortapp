@@ -6,18 +6,19 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
-  BarChart3,
+  LayoutDashboard,
   Users,
   Bot,
-  ShieldAlert,
+  PlusCircle,
+  List,
+  MessageSquare,
   Settings,
+  ShoppingCart,
+  Send,
+  Crown,
   ChevronLeft,
   ChevronRight,
   Flame,
-  ShoppingCart,
-  Send,
-  MessageSquare,
-  ArrowUpRight,
 } from "lucide-react"
 
 interface SidebarProps {
@@ -32,25 +33,73 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
 
   // Define menu items with their sub-items
   const menuItems = [
-    { id: "dashboard", label: "Gösterge Paneli", icon: BarChart3, href: "/" },
-    { id: "users", label: "Kullanıcılar", icon: Users, href: "/users" },
+    {
+      id: "dashboard",
+      label: "Gösterge Paneli",
+      icon: LayoutDashboard,
+      href: "/dashboard",
+    },
+    {
+      id: "users",
+      label: "Kullanıcılar",
+      icon: Users,
+      href: "/users",
+    },
     {
       id: "dating-bot",
       label: "Dating Bot",
       icon: Bot,
-      href: "#",
       subItems: [
-        { id: "create-bot", label: "Bot Oluştur", href: "/create-bot" },
-        { id: "bot-list", label: "Bot Listesi", href: "/bot-list" },
-        { id: "bot-conversations", label: "Bot Konuşmaları", href: "/bot-conversations" },
+        {
+          id: "create-bot",
+          label: "Bot Oluştur",
+          icon: PlusCircle,
+          href: "/bot-management/create",
+        },
+        {
+          id: "bot-list",
+          label: "Bot Listesi",
+          icon: List,
+          href: "/bot-management",
+        },
+        {
+          id: "bot-conversations",
+          label: "Bot Konuşmaları",
+          icon: MessageSquare,
+          href: "/bot-conversations",
+        },
       ],
     },
-    { id: "chat", label: "Sohbet", icon: MessageSquare, href: "/chat" },
-    { id: "escalations", label: "Yükseltilmiş Konuşmalar", icon: ArrowUpRight, href: "/escalations" },
-    { id: "in-app-purchases", label: "Uygulama İçi Satın Alım", icon: ShoppingCart, href: "/in-app-purchases" },
-    { id: "bulk-message", label: "Toplu Mesaj", icon: Send, href: "/bulk-message" },
-    { id: "spam", label: "Spam & Engellenenler", icon: ShieldAlert, href: "/spam" },
-    { id: "settings", label: "Ayarlar", icon: Settings, href: "/settings" },
+    {
+      id: "vip",
+      label: "VIP Üyeler",
+      icon: Crown,
+      href: "/vip",
+    },
+    {
+      id: "chat",
+      label: "Sohbet",
+      icon: MessageSquare,
+      href: "/chat",
+    },
+    {
+      id: "in-app-purchases",
+      label: "Uygulama İçi Satın Alım",
+      icon: ShoppingCart,
+      href: "/in-app-purchases",
+    },
+    {
+      id: "bulk-message",
+      label: "Toplu Mesaj",
+      icon: Send,
+      href: "/bulk-message",
+    },
+    {
+      id: "settings",
+      label: "Ayarlar",
+      icon: Settings,
+      href: "/settings",
+    },
   ]
 
   // Check if the current path is in the Dating Bot category

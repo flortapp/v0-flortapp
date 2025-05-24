@@ -5,6 +5,7 @@ import type {
   EscalationReason,
   ConversationPriority,
 } from "@/types/conversation"
+import { Conversation, Message } from "@/types/conversation"
 
 // In a real app, this would interact with an API
 export class ConversationService {
@@ -354,6 +355,26 @@ export class ConversationService {
     }
 
     return result
+  }
+
+  async transferToLiveChat(conversationId: string): Promise<Conversation> {
+    const conversation = await this.getConversation(conversationId)
+    if (!conversation) {
+      throw new Error("Conversation not found")
+    }
+
+    const updatedConversation: Conversation = {
+      ...conversation,
+      status: "transferred",
+      transferredAt: new Date().toISOString(),
+    }
+
+    // Remove escalation fields if they exist
+    if (updatedConversation.escalatedReason) {
+      delete updatedConversation.escalatedReason
+    }
+
+    return updatedConversation
   }
 }
 
