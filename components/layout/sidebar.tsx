@@ -15,7 +15,6 @@ import {
   Settings,
   ShoppingCart,
   Send,
-  Crown,
   ChevronLeft,
   ChevronRight,
   Flame,
@@ -69,12 +68,6 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
           href: "/bot-conversations",
         },
       ],
-    },
-    {
-      id: "vip",
-      label: "VIP Üyeler",
-      icon: Crown,
-      href: "/vip",
     },
     {
       id: "chat",
