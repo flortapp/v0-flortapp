@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Loader2, Upload } from "lucide-react"
@@ -95,13 +94,10 @@ export function CreateBotContent() {
       const language = formData.get("language")
       const ageFrom = formData.get("ageFrom")
       const ageTo = formData.get("ageTo")
-      const withPhoto = formData.get("withPhoto") === "on"
-      const withBio = formData.get("withBio") === "on"
-      const verified = formData.get("verified") === "on"
       const bio = formData.get("bio")
 
       // Fotoğraf kontrolü
-      if (withPhoto && !photo) {
+      if (!photo) {
         toast({
           title: "Hata",
           description: "Lütfen bir fotoğraf yükleyin.",
@@ -111,7 +107,7 @@ export function CreateBotContent() {
       }
 
       // Biyografi kontrolü
-      if (withBio && !bio) {
+      if (!bio) {
         toast({
           title: "Hata",
           description: "Lütfen bir biyografi girin.",
@@ -126,13 +122,11 @@ export function CreateBotContent() {
       //   language,
       //   ageFrom,
       //   ageTo,
-      //   withPhoto,
-      //   withBio,
-      //   verified,
       //   photo,
       //   bio,
       //   country: "turkey", // Sabit değer
       //   gender: "female", // Sabit değer
+      //   verified: true, // Sabit değer
       // })
 
       // Başarılı toast mesajı
@@ -198,39 +192,6 @@ export function CreateBotContent() {
                 <div className="space-y-2">
                   <Label htmlFor="ageTo">Yaşa kadar</Label>
                   <Input id="ageTo" name="ageTo" type="number" min="18" max="80" defaultValue="45" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="mb-2 block">Seçenekler</Label>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="withPhoto" name="withPhoto" />
-                    <label
-                      htmlFor="withPhoto"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      Fotoğraflı
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="withBio" name="withBio" />
-                    <label
-                      htmlFor="withBio"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      Biyografi ile
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="verified" name="verified" />
-                    <label
-                      htmlFor="verified"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      Doğrulanmış
-                    </label>
-                  </div>
                 </div>
               </div>
 
